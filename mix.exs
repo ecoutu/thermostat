@@ -15,7 +15,8 @@ defmodule Thermostat.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [extra_applications: [:logger],
-     mod: {Thermostat, []}]
+     mod: {Thermostat, []},
+     applications: [:nerves_uart]]
   end
 
   # Dependencies can be Hex packages:
@@ -28,6 +29,6 @@ defmodule Thermostat.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:plug, "~> 1.0"}]
+    [{:plug, "~> 1.0"}, {:nerves_uart, "~> 0.1.1"}]
   end
 end
