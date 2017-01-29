@@ -43,13 +43,16 @@ void loop() {
   voltage = (temp_sensor / 1024.0) * 3.3;
   temp = (voltage - 0.5) * 100;
 
-  Serial.print("Temperature Sensor Value: ");
-  Serial.print(temp_sensor);
-  Serial.print(", Voltage: ");
-  Serial.print(voltage);
-  Serial.print(", Temperature: ");
-  Serial.print(temp);
-  Serial.println(" degrees C");
+//  Serial.print("Temperature Sensor Value: ");
+//  Serial.print(temp_sensor);
+//  Serial.print(", Voltage: ");
+//  Serial.print(voltage);
+//  Serial.print(", Temperature: ");
+//  Serial.print(temp);
+//  Serial.println(" degrees C");
+
+  Serial.print("TEMP ");
+  Serial.println(temp);
 
   lcd.clear();
   lcd.print(temp);

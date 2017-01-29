@@ -12,6 +12,8 @@ defmodule SerialServer.Application do
     children = [
       # Starts a worker by calling: SerialServer.Worker.start_link(arg1, arg2, arg3)
       # worker(SerialServer.Worker, [arg1, arg2, arg3]),
+      supervisor(Task.Supervisor, [[name: SerialServer.TaskSupervisor]]),
+      worker(Task, [SerialServer, :accept, ["ttyACM0", 9600]])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
