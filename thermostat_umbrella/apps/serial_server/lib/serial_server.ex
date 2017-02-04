@@ -3,8 +3,7 @@ defmodule SerialServer do
 
   def accept(device, speed) do
     {:ok, pid} = Nerves.UART.start_link
-    Nerves.UART.open(pid, device, speed: speed, active: false)
-    Nerves.UART.configure(pid, framing: {Nerves.UART.Framing.Line, separator: "\r\n"})
+    Nerves.UART.open(pid, device, speed: speed, active: false, framing: {Nerves.UART.Framing.Line, separator: "\r\n"})
     Logger.info "Accepting connections on device #{device}"
     serve(pid)
   end

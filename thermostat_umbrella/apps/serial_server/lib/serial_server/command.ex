@@ -30,7 +30,7 @@ defmodule SerialServer.Command do
   def run(command)
 
   def run({:temperature, temperature}) do
-    Thermostat.Registry.create(Thermostat.Registry, bucket)
+#    Thermostat.Registry.create(Thermostat.Registry, bucket)
     {:ok, "OK\r\n"}
   end
 
