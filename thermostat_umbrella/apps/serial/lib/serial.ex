@@ -8,25 +8,12 @@ defmodule Serial do
     serve(pid)
   end
 
-#  defp loop_acceptor(socket) do
-#    {:ok, client} = :gen_tcp.accept(socket)
-#    {:ok, pid} = Task.Supervisor.start_child(SerialServer.TaskSupervisor, fn -> serve(client) end)
-#    :ok = :gen_tcp.controlling_process(client, pid)
-#    loop_acceptor(socket)
-#  end
-
   defp serve(pid) do
     msg =
       with {:ok, data} <- read_line(pid),
            {:ok, command} <- Serial.Command.parse(data),
            do: Serial.Command.run(command)
 
-#    case msg do
-#      {:ok, result} ->
-#        Logger.info "OK! Result: #{result}"
-#      {:error, result} ->
-#        Logger.error "OH NOES! Result: #{result}"
-#    end
     write_line(pid, msg)
     serve(pid)
   end
@@ -42,19 +29,4 @@ defmodule Serial do
   defp write_line(pid, {:error, :unknown_command}) do
     Nerves.UART.write(pid, "UNKNOWN")
   end
-#
-#  defp write_line(_socket, {:error, :closed}) do
-#    # The connection was closed, exit politely.
-#    exit(:shutdown)
-#  end
-#
-#  defp write_line(socket, {:error, :not_found}) do
-#    :gen_tcp.send(socket, "NOT FOUND\r\n")
-#  end
-#
-#  defp write_line(socket, {:error, error}) do
-#    # Unknown error. Write to the client and exit.
-#    :gen_tcp.send(socket, "ERROR\r\n")
-#    exit(error)
-#  end
 end
