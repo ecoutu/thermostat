@@ -3,7 +3,7 @@ defmodule Serial do
 
   def connect(device, speed) do
     {:ok, pid} = Nerves.UART.start_link
-    Nerves.UART.open(pid, device, speed: speed, active: false, framing: {Nerves.UART.Framing.Line, separator: "\r\n"})
+    Nerves.UART.open(pid, device, speed: speed, active: false, framing: {Nerves.UART.Framing.Line, separator: "\n"})
     Logger.info "Accepting connections on device #{device}"
     serve(pid)
   end
@@ -27,7 +27,7 @@ defmodule Serial do
 #      {:error, result} ->
 #        Logger.error "OH NOES! Result: #{result}"
 #    end
-
+    write_line(pid, msg)
     serve(pid)
   end
 
@@ -35,27 +35,26 @@ defmodule Serial do
     Nerves.UART.read(pid, 60000)
   end
 
-  defp write_line(socket, {:ok, text}) do
-    :gen_tcp.send(socket, text)
+  defp write_line(pid, {:ok, text}) do
+    Nerves.UART.write(pid, text)
   end
 
-  defp write_line(socket, {:error, :unknown_command}) do
-    # Known error. Write to the client.
-    :gen_tcp.send(socket, "UNKNOWN COMMAND\r\n")
+  defp write_line(pid, {:error, :unknown_command}) do
+    Nerves.UART.write(pid, "UNKNOWN")
   end
-
-  defp write_line(_socket, {:error, :closed}) do
-    # The connection was closed, exit politely.
-    exit(:shutdown)
-  end
-
-  defp write_line(socket, {:error, :not_found}) do
-    :gen_tcp.send(socket, "NOT FOUND\r\n")
-  end
-
-  defp write_line(socket, {:error, error}) do
-    # Unknown error. Write to the client and exit.
-    :gen_tcp.send(socket, "ERROR\r\n")
-    exit(error)
-  end
+#
+#  defp write_line(_socket, {:error, :closed}) do
+#    # The connection was closed, exit politely.
+#    exit(:shutdown)
+#  end
+#
+#  defp write_line(socket, {:error, :not_found}) do
+#    :gen_tcp.send(socket, "NOT FOUND\r\n")
+#  end
+#
+#  defp write_line(socket, {:error, error}) do
+#    # Unknown error. Write to the client and exit.
+#    :gen_tcp.send(socket, "ERROR\r\n")
+#    exit(error)
+#  end
 end

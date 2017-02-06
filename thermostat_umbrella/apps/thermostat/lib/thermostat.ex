@@ -4,6 +4,15 @@ defmodule Thermostat do
   """
 
   def update_temperature(temperature) do
-    Thermostat.Server.update_temperature(temperature)
+    Thermostat.Server.put(:temperature, temperature)
+    if temperature > Thermostat.Server.get(:target_temperature) do
+      "RELAY OFF"
+    else
+      "RELAY ON"
+    end
+  end
+
+  def set_target_temperature(temperature) do
+    Thermostat.Server.put(:target_temperature, temperature)
   end
 end

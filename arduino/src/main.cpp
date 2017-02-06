@@ -1,72 +1,108 @@
 #include "Arduino.h"
 #include "LiquidCrystal.h"
-// #include "Servo.h"
+
+enum Response {unknown, relay_on, relay_off};
 
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
+const unsigned int READ_BUFFER_SIZE = 256;
 const unsigned int NUM_READS = 8;
 const unsigned int TEMP_SENSOR_PIN = A0;
 const unsigned int VOLTAGE_SENSOR_PIN = A1;
+const unsigned int RELAY_PIN = 8;
 const float baseline_temp = 20.0;
-
-// unsigned int angle = 0;
-// Servo servo;
 
 void setup() {
   analogReference(EXTERNAL);
   Serial.begin(9600);
 
   // relay
-  pinMode(8, OUTPUT);
-  digitalWrite(8, LOW);
-
-  // servo
-  // servo.attach(9);
-  // servo.write(angle);
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);
 
   // lcd
   lcd.begin(16, 2);
 }
 
-void loop() {
+float read_temperature(unsigned int pin) {
   unsigned int temp_sensor = 0;
   float voltage, temp;
 
-  analogRead(TEMP_SENSOR_PIN);
+  analogRead(pin);
 
   for (unsigned int i = 0; i < NUM_READS; i++) {
-    temp_sensor += analogRead(TEMP_SENSOR_PIN);
+    temp_sensor += analogRead(pin);
   }
 
   temp_sensor /= NUM_READS;
 
   voltage = (temp_sensor / 1024.0) * 3.3;
-  temp = (voltage - 0.5) * 100;
+  return (voltage - 0.5) * 100;
+}
 
-//  Serial.print("Temperature Sensor Value: ");
-//  Serial.print(temp_sensor);
-//  Serial.print(", Voltage: ");
-//  Serial.print(voltage);
-//  Serial.print(", Temperature: ");
-//  Serial.print(temp);
-//  Serial.println(" degrees C");
-
+void send_temperature(float temp) {
   Serial.print("TEMP ");
-  Serial.println(temp);
+  Serial.print(temp);
+  Serial.print("\n");
+}
 
+Response read_response() {
+  char buffer[READ_BUFFER_SIZE];
+  unsigned int bytes_read = 0;
+
+  bytes_read = Serial.readBytesUntil('\n', buffer, READ_BUFFER_SIZE);
+  if (bytes_read > 0) {
+    buffer[bytes_read] = '\0';
+    if (strncmp(buffer, "RELAY ON", READ_BUFFER_SIZE) == 0) {
+      return relay_on;
+    } else if (strncmp(buffer, "RELAY OFF", READ_BUFFER_SIZE) == 0) {
+      return relay_off;
+    }
+  }
+  return unknown;
+}
+
+void update_lcd(float temp, Response response) {
   lcd.clear();
   lcd.print(temp);
   lcd.print((char) 223);
   lcd.print("C");
+  lcd.setCursor(0, 1);
 
-  // unsigned long time = millis();
-  // angle = (angle + 60) % 180;
+  switch(response) {
+    case relay_on:
+      lcd.print("RELAY ON");
+      break;
+    case relay_off:
+      lcd.print("RELAY OFF");
+      break;
+    default:
+      lcd.print("UNKNOWN");
+      break;
+  }
+}
 
-  // lcd.setCursor(0, 1);
-  // lcd.print(angle);
-  // lcd.print((char) 223);
+void handle_response(Response response) {
+  switch(response) {
+    case relay_on:
+      digitalWrite(RELAY_PIN, LOW);
+      break;
+    case relay_off:
+      digitalWrite(RELAY_PIN, HIGH);
+      break;
+    default:
+      break;
+  }
+}
 
-  // servo.write(angle);
+void loop() {
+  float temp = read_temperature(TEMP_SENSOR_PIN);
+  Response response;
+
+  send_temperature(temp);
+  response = read_response();
+  update_lcd(temp, response);
+  handle_response(response);
 
   delay(1000);
 }
